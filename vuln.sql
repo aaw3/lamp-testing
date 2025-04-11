@@ -31,4 +31,30 @@ DELIMITER ;
 -- Another vulnerable query example (direct concatenation)
 CREATE PROCEDURE search_users(IN search_term VARCHAR(100))
 BEGIN
-    SET @query = CONCAT('SELECT * FROM users WHERE username LIKE ''%', search_term, '%''
+    SET @query = CONCAT('SELECT * FROM users WHERE username LIKE ''%', search_term, '%'' OR email LIKE ''%', search_term, '%''');
+    PREPARE stmt FROM @query;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+END //
+
+-- Vulnerable function to change email
+DELIMITER //
+CREATE FUNCTION change_email(p_user_id INT, p_new_email VARCHAR(100)) RETURNS VARCHAR(100)
+BEGIN
+    SET @sql = CONCAT('UPDATE users SET email = ''', p_new_email, ''' WHERE id = ', p_user_id);
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    RETURN 'Email updated';
+END //
+DELIMITER ;
+
+-- Example of how these vulnerabilities could be exploited:
+-- For the login procedure:
+-- CALL vulnerable_login('admin', 'wrongpass' OR '1'='1'); -- Would bypass authentication
+--
+-- For the search_users procedure:
+-- CALL search_users(''' OR 1=1; --'); -- Would return all users
+--
+-- For the change_email function:
+-- SELECT change_email(1, 'hacker@evil.com'' WHERE username=''admin''; --'); -- Would change admin's email
