@@ -49,12 +49,3 @@ BEGIN
 END //
 DELIMITER ;
 
--- Example of how these vulnerabilities could be exploited:
--- For the login procedure:
--- CALL vulnerable_login('admin', 'wrongpass' OR '1'='1'); -- Would bypass authentication
---
--- For the search_users procedure:
--- CALL search_users(''' OR 1=1; --'); -- Would return all users
---
--- For the change_email function:
--- SELECT change_email(1, 'hacker@evil.com'' WHERE username=''admin''; --'); -- Would change admin's email
